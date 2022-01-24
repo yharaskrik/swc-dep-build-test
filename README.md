@@ -1,94 +1,59 @@
+run `yarn nx build lib1` is has a dep on `lib2`
 
+You will see:
 
-# SwcDepBuildTest
+```
+➜ yarn nx build lib1
+yarn run v1.22.17
+$ /Users/jaybell/WebstormProjects/swc-dep-build-test/node_modules/.bin/nx build lib1
 
-This project was generated using [Nx](https://nx.dev).
+ >  NX   Running target build for project lib1 and 1 task(s) it depends on
 
-<p style="text-align: center;"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-logo.png" width="450"></p>
+ ———————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
-🔎 **Smart, Fast and Extensible Build System**
+> nx run lib1:build
 
-## Adding capabilities to your workspace
+Compiling with SWC for lib1...
+Successfully compiled: 2 files with swc (15.07ms)
+(node:31386) UnhandledPromiseRejectionWarning: Error: Invalid config file: [object Object],[object Object]
+    at /Users/jaybell/WebstormProjects/swc-dep-build-test/node_modules/@nrwl/js/src/utils/typescript/run-type-check.js:62:19
+    at Generator.next (<anonymous>)
+    at fulfilled (/Users/jaybell/WebstormProjects/swc-dep-build-test/node_modules/tslib/tslib.js:114:62)
+(node:31386) UnhandledPromiseRejectionWarning: Unhandled promise rejection. This error originated either by throwing inside of an async function without a catch block, or by rejecting a promise which was not handled with .catch(). To terminate the node process on unhandled promise rejection, use the CLI flag `--unhandled-rejections=strict` (see https://nodejs.org/api/cli.html#cli_unhandled_rejections_mode). (rejection id: 1)
+(node:31386) [DEP0018] DeprecationWarning: Unhandled promise rejections are deprecated. In the future, promise rejections that are not handled will terminate the Node.js process with a non-zero exit code.
+```
 
-Nx supports many plugins which add capabilities for developing different types of applications and different tools.
+Where the error that isn't being serialized right is something like
 
-These capabilities include generating applications, libraries, etc as well as the devtools to test, and build projects as well.
+```
+[
+    {
+        "messageText": "Cannot read file '/Users/jaybell/WebstormProjects/trellis-mono3/Users/jaybell/WebstormProjects/trellis-mono3/libs/type/auction/tsconfig.lib.json'.",
+        "category": 1,
+        "code": 5083
+    },
+    {
+        "messageText": "No inputs were found in config file 'tsconfig.json'. Specified 'include' paths were '[\"**/*\"]' and 'exclude' paths were '[]'.",
+        "category": 1,
+        "code": 18003
+    }
+]
+```
 
-Below are our core plugins:
+Which is because the generated tsconfig for the lib that overwrites import path mappings is being generated with the path to the root of the workspace root in it when it shouldn't be
 
-- [React](https://reactjs.org)
-  - `npm install --save-dev @nrwl/react`
-- Web (no framework frontends)
-  - `npm install --save-dev @nrwl/web`
-- [Angular](https://angular.io)
-  - `npm install --save-dev @nrwl/angular`
-- [Nest](https://nestjs.com)
-  - `npm install --save-dev @nrwl/nest`
-- [Express](https://expressjs.com)
-  - `npm install --save-dev @nrwl/express`
-- [Node](https://nodejs.org)
-  - `npm install --save-dev @nrwl/node`
+generated tsconfig
+```
+{
+  "compilerOptions": {
+    "paths": {
+      "@swc-dep-build-test/lib2": [
+        "dist/packages/lib2"
+      ]
+    }
+  },
+  "extends": "../../../Users/jaybell/WebstormProjects/swc-dep-build-test/packages/lib1/tsconfig.lib.json"
+}
+```
 
-There are also many [community plugins](https://nx.dev/community) you could add.
-
-## Generate an application
-
-Run `nx g @nrwl/react:app my-app` to generate an application.
-
-> You can use any of the plugins above to generate applications as well.
-
-When using Nx, you can create multiple applications and libraries in the same workspace.
-
-## Generate a library
-
-Run `nx g @nrwl/react:lib my-lib` to generate a library.
-
-> You can also use any of the plugins above to generate libraries as well.
-
-Libraries are shareable across libraries and applications. They can be imported from `@swc-dep-build-test/mylib`.
-
-## Development server
-
-Run `nx serve my-app` for a dev server. Navigate to http://localhost:4200/. The app will automatically reload if you change any of the source files.
-
-## Code scaffolding
-
-Run `nx g @nrwl/react:component my-component --project=my-app` to generate a new component.
-
-## Build
-
-Run `nx build my-app` to build the project. The build artifacts will be stored in the `dist/` directory. Use the `--prod` flag for a production build.
-
-## Running unit tests
-
-Run `nx test my-app` to execute the unit tests via [Jest](https://jestjs.io).
-
-Run `nx affected:test` to execute the unit tests affected by a change.
-
-## Running end-to-end tests
-
-Run `ng e2e my-app` to execute the end-to-end tests via [Cypress](https://www.cypress.io).
-
-Run `nx affected:e2e` to execute the end-to-end tests affected by a change.
-
-## Understand your workspace
-
-Run `nx graph` to see a diagram of the dependencies of your projects.
-
-## Further help
-
-Visit the [Nx Documentation](https://nx.dev) to learn more.
-
-
-
-## ☁ Nx Cloud
-
-### Distributed Computation Caching & Distributed Task Execution
-
-<p style="text-align: center;"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-cloud-card.png"></p>
-
-Nx Cloud pairs with Nx in order to enable you to build and test code more rapidly, by up to 10 times. Even teams that are new to Nx can connect to Nx Cloud and start saving time instantly.
-
-Teams using Nx gain the advantage of building full-stack applications with their preferred framework alongside Nx’s advanced code generation and project dependency graph, plus a unified experience for both frontend and backend developers.
-
-Visit [Nx Cloud](https://nx.app/) to learn more.
+That should actually be `../../../sswc-dep-build-test/packages/lib1/tsconfig.lib.json`

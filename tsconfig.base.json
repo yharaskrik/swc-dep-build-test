@@ -14,7 +14,10 @@
     "skipLibCheck": true,
     "skipDefaultLibCheck": true,
     "baseUrl": ".",
-    "paths": {}
+    "paths": {
+      "@swc-dep-build-test/lib1": ["packages/lib1/src/index.ts"],
+      "@swc-dep-build-test/lib2": ["packages/lib2/src/index.ts"]
+    }
   },
   "exclude": ["node_modules", "tmp"]
 }
